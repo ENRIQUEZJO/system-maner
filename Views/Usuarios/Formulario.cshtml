@@ -1,0 +1,85 @@
+﻿@model SystemManer.ViewModels.UsuarioFormViewModel
+
+@{
+    var nuevo = Model.Id is null;
+    ViewData["Title"] = nuevo ? "Crear usuario" : "Editar usuario";
+
+    var porDefecto = new Dictionary<string, string[]>
+    {
+        [Roles.Admin] = Permisos.PorDefecto(Roles.Admin),
+        [Roles.Supervisor] = Permisos.PorDefecto(Roles.Supervisor),
+        [Roles.Tecnico] = Permisos.PorDefecto(Roles.Tecnico)
+    };
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h4 mb-4">@ViewData["Title"]</h2>
+
+                <form asp-action="@(nuevo ? "Crear" : "Editar")" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="EsActual" />
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" readonly="@(!nuevo)" autocomplete="off" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                        @if (!nuevo)
+                        {
+                            <div class="form-text">Déjala vacía para no cambiarla.</div>
+                        }
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Rol" class="form-label"></label>
+                        <select asp-for="Rol" asp-items="Model.RolesDisponibles" class="form-select"></select>
+                        <span asp-validation-for="Rol" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label d-block">Permisos</label>
+                        @foreach (var p in Permisos.Todos)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="PermisosSeleccionados"
+                                       value="@p" id="perm_@p" @(Model.PermisosSeleccionados.Contains(p) ? "checked" : "") />
+                                <label class="form-check-label" for="perm_@p">@p</label>
+                            </div>
+                        }
+                        <div class="form-text">El Admin siempre tiene todos los permisos.</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Al cambiar el rol, marca los permisos que ese rol trae por defecto
+        const porDefecto = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(porDefecto));
+        const selectRol = document.getElementById("Rol");
+
+        selectRol.addEventListener("change", () => {
+            const lista = porDefecto[selectRol.value] || [];
+            document.querySelectorAll("input[name='PermisosSeleccionados']").forEach(c => {
+                c.checked = lista.includes(c.value);
+            });
+        });
+    </script>
+}

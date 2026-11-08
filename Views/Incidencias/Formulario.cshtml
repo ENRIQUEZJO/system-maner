@@ -1,0 +1,92 @@
+﻿@model SystemManer.ViewModels.IncidenciaFormViewModel
+
+@{
+    var editando = Model.Id != 0;
+    ViewData["Title"] = editando ? "Editar registro" : "Registrar problema";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-9 col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h4 mb-4">@ViewData["Title"]</h2>
+
+                @if (!Model.Maquinas.Any())
+                {
+                    <div class="alert alert-warning">
+                        Primero debes <a asp-controller="Maquinas" asp-action="Registrar">registrar una máquina</a>.
+                    </div>
+                }
+
+                <form asp-action="@(editando ? "Editar" : "Registrar")" method="post" enctype="multipart/form-data">
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="mb-3">
+                        <label asp-for="MaquinaId" class="form-label"></label>
+                        <select asp-for="MaquinaId" asp-items="Model.Maquinas" class="form-select">
+                            <option value="0">-- Selecciona una máquina --</option>
+                        </select>
+                        <span asp-validation-for="MaquinaId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Problema" class="form-label"></label>
+                        <textarea asp-for="Problema" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Problema" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Solucion" class="form-label"></label>
+                        <textarea asp-for="Solucion" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Solucion" class="text-danger"></span>
+                    </div>
+
+                    @if (Model.ArchivosActuales.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label d-block">Archivos actuales (marca los que quieras quitar)</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                @foreach (var a in Model.ArchivosActuales)
+                                {
+                                    <div class="text-center">
+                                        @if (a.EsVideo)
+                                        {
+                                            <video src="@a.Ruta" style="height: 90px;" muted preload="metadata"></video>
+                                        }
+                                        else
+                                        {
+                                            <img src="@a.Ruta" class="img-thumbnail" style="height: 90px;" alt="@a.NombreOriginal" />
+                                        }
+                                        <div class="form-check d-flex justify-content-center gap-1 mt-1">
+                                            <input class="form-check-input" type="checkbox" name="EliminarArchivosIds"
+                                                   value="@a.Id" id="quitar_@a.Id" />
+                                            <label class="form-check-label small" for="quitar_@a.Id">Quitar</label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="mb-3">
+                        <label class="form-label">Agregar fotos y videos</label>
+                        <input type="file" name="Archivos" multiple class="form-control"
+                               accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" />
+                        <div class="form-text">Fotos: JPG, PNG o WEBP (máx. 5 MB c/u). Videos: MP4, WEBM o MOV (máx. 100 MB c/u).</div>
+                        <span asp-validation-for="Archivos" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" name="accion" value="guardar" class="btn btn-primary">Guardar borrador</button>
+                        <button type="submit" name="accion" value="enviar" class="btn btn-success">Guardar y enviar al supervisor</button>
+                        <a asp-action="Historial" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

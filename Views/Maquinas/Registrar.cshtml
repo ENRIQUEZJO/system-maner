@@ -1,0 +1,35 @@
+﻿@model SystemManer.Models.Maquina
+
+@{
+    ViewData["Title"] = "Registrar máquina";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h4 mb-4">Registrar máquina</h2>
+
+                <form asp-action="Registrar" method="post">
+                    <div class="mb-3">
+                        <label asp-for="Nombre" class="form-label"></label>
+                        <input asp-for="Nombre" class="form-control" autofocus />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Ubicacion" class="form-label"></label>
+                        <input asp-for="Ubicacion" class="form-control" />
+                        <span asp-validation-for="Ubicacion" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

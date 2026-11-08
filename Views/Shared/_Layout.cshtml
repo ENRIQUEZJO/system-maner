@@ -1,0 +1,110 @@
+﻿@using Microsoft.EntityFrameworkCore
+@inject SystemManer.Data.ApplicationDbContext Db
+
+@{
+    var sinLeer = 0;
+    if (User.Identity?.IsAuthenticated == true && User.Tiene(Permisos.Notificaciones))
+    {
+        var miId = User.IdUsuario();
+        sinLeer = await Db.Notificaciones.CountAsync(n => n.UsuarioId == miId && !n.Leida);
+    }
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - System Maner</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Incidencias" asp-action="Historial">System Maner</a>
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="menu">
+                        <ul class="navbar-nav me-auto">
+                            @if (User.Tiene(Permisos.Crear))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Maquinas" asp-action="Registrar">Registrar máquina</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Incidencias" asp-action="Registrar">Registrar problema</a>
+                                </li>
+                            }
+                            @if (User.Tiene(Permisos.Leer))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Incidencias" asp-action="Historial">Historial</a>
+                                </li>
+                            }
+                            @if (User.IsInRole(Roles.Admin))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
+                                </li>
+                            }
+                        </ul>
+
+                        <div class="d-flex align-items-center gap-3">
+                            @if (User.Tiene(Permisos.Notificaciones))
+                            {
+                                <a asp-controller="Notificaciones" asp-action="Index" class="text-white text-decoration-none">
+                                    Notificaciones
+                                    @if (sinLeer > 0)
+                                    {
+                                        <span class="badge bg-danger">@sinLeer</span>
+                                    }
+                                </a>
+                            }
+
+                            <span class="navbar-text small">@User.Identity!.Name</span>
+
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @if (TempData["Mensaje"] is string mensaje)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @mensaje
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] is string error)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @error
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+            }
+
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

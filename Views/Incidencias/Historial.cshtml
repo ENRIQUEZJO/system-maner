@@ -1,0 +1,89 @@
+﻿@model List<Incidencia>
+
+@{
+    ViewData["Title"] = "Historial";
+    var busqueda = ViewData["Busqueda"] as string;
+    var estadoSel = ViewData["Estado"] as EstadoIncidencia?;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h4 mb-0">Historial</h2>
+    @if (User.Tiene(Permisos.Crear))
+    {
+        <a asp-action="Registrar" class="btn btn-primary">Registrar problema</a>
+    }
+</div>
+
+<form asp-action="Historial" method="get" class="row g-2 mb-4">
+    <div class="col-md-6">
+        <input type="text" name="q" value="@busqueda" class="form-control"
+               placeholder="Buscar por máquina, problema o solución..." />
+    </div>
+    <div class="col-md-3">
+        <select name="estado" class="form-select">
+            <option value="">Todos los estados</option>
+            @foreach (var e in Enum.GetValues<EstadoIncidencia>())
+            {
+                <option value="@e" selected="@(estadoSel == e)">@e</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-dark">Buscar</button>
+        <a asp-action="Historial" class="btn btn-outline-secondary">Limpiar</a>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No hay registros.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Máquina</th>
+                    <th>Autor</th>
+                    <th>Problema</th>
+                    <th>Estado</th>
+                    <th>Archivos</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var i in Model)
+                {
+                    <tr>
+                        <td class="text-nowrap">@i.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@i.Maquina?.Nombre</td>
+                        <td>@i.Usuario?.Email</td>
+                        <td style="max-width: 300px;">
+                            @(i.Problema.Length > 80 ? i.Problema[..80] + "…" : i.Problema)
+                        </td>
+                        <td><span class="badge @i.Estado.ClaseBadge()">@i.Estado</span></td>
+                        <td>@(i.Archivos.Count > 0 ? i.Archivos.Count.ToString() : "")</td>
+                        <td class="text-end text-nowrap">
+                            <a asp-action="Detalle" asp-route-id="@i.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
+
+                            @if (i.PuedeEditar(User))
+                            {
+                                <a asp-action="Editar" asp-route-id="@i.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                            }
+
+                            @if (i.PuedeBorrar(User))
+                            {
+                                <form asp-action="Eliminar" asp-route-id="@i.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('¿Eliminar este registro?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Borrar</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

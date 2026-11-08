@@ -1,0 +1,121 @@
+﻿@model Incidencia
+
+@{
+    ViewData["Title"] = $"Registro #{Model.Id}";
+}
+
+<div class="mb-3">
+    <a asp-action="Historial" class="text-decoration-none">&larr; Volver al historial</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h2 class="h4 mb-0">@Model.Maquina?.Nombre</h2>
+                    <span class="badge @Model.Estado.ClaseBadge()">@Model.Estado</span>
+                </div>
+
+                <h3 class="h6 text-muted text-uppercase">Problema</h3>
+                <p style="white-space: pre-line;">@Model.Problema</p>
+
+                <h3 class="h6 text-muted text-uppercase">Solución</h3>
+                <p style="white-space: pre-line;">@(Model.Solucion ?? "—")</p>
+
+                @if (Model.Archivos.Any())
+                {
+                    <hr />
+                    <h3 class="h6 text-muted text-uppercase">Fotos y videos</h3>
+                    <div class="d-flex flex-wrap gap-3">
+                        @foreach (var a in Model.Archivos)
+                        {
+                            @if (a.EsVideo)
+                            {
+                                <video src="@a.Ruta" controls preload="metadata" style="max-width: 100%; max-height: 260px;"></video>
+                            }
+                            else
+                            {
+                                <a href="@a.Ruta" target="_blank" rel="noopener">
+                                    <img src="@a.Ruta" class="img-thumbnail" style="max-height: 200px;" alt="@a.NombreOriginal" />
+                                </a>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <dl class="mb-0">
+                    <dt>Autor</dt>
+                    <dd>@Model.Usuario?.Email</dd>
+
+                    <dt>Fecha</dt>
+                    <dd>@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                    @if (Model.FechaEnvio.HasValue)
+                    {
+                        <dt>Enviado</dt>
+                        <dd>@Model.FechaEnvio.Value.ToString("dd/MM/yyyy HH:mm")</dd>
+                    }
+
+                    @if (Model.FechaRevision.HasValue)
+                    {
+                        <dt>Revisado por</dt>
+                        <dd>@Model.RevisadoPor (@Model.FechaRevision.Value.ToString("dd/MM/yyyy HH:mm"))</dd>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.ComentarioRevision))
+                    {
+                        <dt>Comentario del supervisor</dt>
+                        <dd class="mb-0" style="white-space: pre-line;">@Model.ComentarioRevision</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2">
+            @if (Model.PuedeEnviar(User))
+            {
+                <form asp-action="Enviar" asp-route-id="@Model.Id" method="post"
+                      onsubmit="return confirm('¿Enviar al supervisor para su validación?');">
+                    <button type="submit" class="btn btn-success w-100">Enviar al supervisor</button>
+                </form>
+            }
+
+            @if (Model.PuedeEditar(User))
+            {
+                <a asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-outline-primary">Editar</a>
+            }
+
+            @if (Model.PuedeBorrar(User))
+            {
+                <form asp-action="Eliminar" asp-route-id="@Model.Id" method="post"
+                      onsubmit="return confirm('¿Eliminar este registro?');">
+                    <button type="submit" class="btn btn-outline-danger w-100">Borrar</button>
+                </form>
+            }
+        </div>
+
+        @if (Model.PuedeRevisar(User))
+        {
+            <div class="card shadow-sm mt-3">
+                <div class="card-body">
+                    <h3 class="h6 text-muted text-uppercase">Validación</h3>
+                    <form asp-action="Revisar" asp-route-id="@Model.Id" method="post">
+                        <textarea name="comentario" class="form-control mb-2" rows="3"
+                              placeholder="Comentario (obligatorio si rechazas)"></textarea>
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="aprobar" value="true" class="btn btn-success flex-fill">Validar</button>
+                            <button type="submit" name="aprobar" value="false" class="btn btn-danger flex-fill">Rechazar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>
